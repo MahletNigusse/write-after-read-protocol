@@ -1688,6 +1688,10 @@ public:
 					or buf_block_t::mutex. */
 # endif /* UNIV_DEBUG */
 #endif /* !UNIV_HOTBACKUP */
+    /* mijin */
+    ibool       copy_target;    /*!< TRUE if the block is a target
+                    block to be copied to TWB */ 
+    /* end */
 };
 
 /** The buffer control block structure */
@@ -2265,7 +2269,46 @@ struct buf_pool_t{
 # error "BUF_BUDDY_LOW > UNIV_ZIP_SIZE_MIN"
 #endif
 	/* @} */
+
+    /* mijin */
+    ibool           need_to_flush_twb;
+                    /*!< TRUE if this buffer pool needs to
+                    be flushed because of dirty pages in TWB */
+    ibool           batch_running;
+                    /*!< TRUE if the process of copying dirty
+                    pages to TWB is running */
+    ibool           flush_running;
+                    /*!< TRUE if the process of flushing dirty
+                    pages in TWB is running */
+    os_event_t      b_event;    /*!< event where threads wait
+                    for a batch copy to end */
+    os_event_t      f_event;    /*!< event where threads wait
+                    for a batch flush to end */
+    byte*           write_buf;  /*!< write buffer used in
+                    writing to the TWB */
+    byte*           write_buf_unaligned;
+                    /*!< pointer to write_buf, buf unaligned */
+    ulint           first_free;
+                    /*!< first free position in write_buf */
+    ulint           total_entry;
+                    /*!< the number of blocks in TWB */
+    hash_table_t*   twb_hash;   /*!< hash table of twb_meta_dir_t,
+                    indexed by (space_id, offset) */
+    //rw_lock_t*      twb_hash_lock;
+    buf_block_t*    twb_block_arr;  /*!< array to store pointers
+                    to the buffer blocks which have been cached
+                    to write_buf */
+    /* end */
 };
+
+/* mijin */
+struct twb_meta_dir_t {
+    ib_uint32_t     space;  /*!< tablespace id */
+    ib_uint32_t     offset; /*!< page number */
+    twb_meta_dir_t* hash;   /*!< node used in chaining to
+                    buf_pool->twb_hash */
+}; 
+/* end */
 
 /** Print the given buf_pool_t object.
 @param[in,out]	out		the output stream

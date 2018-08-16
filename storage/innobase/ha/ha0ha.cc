@@ -59,7 +59,10 @@ ib_create(
 	hash_table_t*	table;
 
 	ut_a(type == MEM_HEAP_FOR_BTR_SEARCH
-	     || type == MEM_HEAP_FOR_PAGE_HASH);
+	     || type == MEM_HEAP_FOR_PAGE_HASH
+         /* mijin */
+	     || type == MEM_HEAP_FOR_TWB_HASH
+         /* end */);
 
 	ut_ad(ut_is_2pow(n_sync_obj));
 	table = hash_create(n);
@@ -78,9 +81,12 @@ ib_create(
 		return(table);
 	}
 
-	if (type == MEM_HEAP_FOR_PAGE_HASH) {
+	if (type == MEM_HEAP_FOR_PAGE_HASH
+        /* mijin*/
+        || type == MEM_HEAP_FOR_TWB_HASH
+        /* end */) {
 		/* We create a hash table protected by rw_locks for
-		buf_pool->page_hash. */
+		buf_pool->page_hash or buf_pool->twb_hash. */
 		hash_create_sync_obj(
 			table, HASH_TABLE_SYNC_RW_LOCK, id, n_sync_obj);
 	} else {

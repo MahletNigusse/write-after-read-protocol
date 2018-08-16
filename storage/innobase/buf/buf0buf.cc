@@ -1834,6 +1834,50 @@ buf_pool_init_instance(
 		buf_pool->watch[i].buf_pool_index = buf_pool->instance_no;
 	}
 
+    /* mijin */
+    buf_pool->need_to_flush_twb = false;
+    buf_pool->batch_running = false;
+    buf_pool->flush_running = false;
+
+    buf_pool->b_event = os_event_create(0);
+    buf_pool->f_event = os_event_create(0);
+
+    buf_pool->total_entry = srv_LRU_scan_depth;
+    buf_pool->first_free = 0;
+
+    /* Initialize the temporary write buffer. */
+    buf_pool->write_buf_unaligned = static_cast<byte*>(
+            ut_malloc_nokey((1 + buf_pool->total_entry) * UNIV_PAGE_SIZE));
+
+    buf_pool->write_buf = static_cast<byte*>(
+            ut_align(buf_pool->write_buf_unaligned,
+                UNIV_PAGE_SIZE));
+
+    /* Initialize hash structure for copy pool. */
+    srv_n_twb_hash_locks = static_cast<ulong>(
+            ut_2_power_up(srv_n_twb_hash_locks));
+
+    buf_pool->twb_hash = ib_create(
+            2 * buf_pool->total_entry,
+            LATCH_ID_HASH_TABLE_RW_LOCK,
+            srv_n_twb_hash_locks,
+            MEM_HEAP_FOR_TWB_HASH);
+
+    /* Initialize a block and page structure. */
+    buf_pool->twb_block_arr = static_cast<buf_block_t*>(
+            ut_zalloc_nokey(buf_pool->total_entry * sizeof(buf_block_t)));
+
+    for (i = 0; i < buf_pool->total_entry; i++) {
+        mutex_create(LATCH_ID_BUF_BLOCK_MUTEX,
+                &(buf_pool->copy_block_arr[i]).mutex);
+        rw_lock_create(PFS_NOT_INSTRUMENTED,
+                &(buf_pool->copy_block_arr[i]).lock, SYNC_LEVEL_VARYING);
+
+        assert(!posix_memalign((void **) &(buf_pool->copy_block_arr[i]).frame,
+                    4096, UNIV_PAGE_SIZE));
+    }
+    /* end */
+
 	/* All fields are initialized by ut_zalloc_nokey(). */
 
 	buf_pool->try_LRU_scan = TRUE;
@@ -1921,6 +1965,17 @@ buf_pool_free_instance(
 	ha_clear(buf_pool->page_hash);
 	hash_table_free(buf_pool->page_hash);
 	hash_table_free(buf_pool->zip_hash);
+
+    /* mijin */
+    os_event_destroy(buf_pool->b_event);
+    os_event_destroy(buf_pool->f_event);
+
+    ut_free(buf_pool->write_buf_unaligned);
+    ut_free(buf_pool->twb_block_arr);
+
+    ha_clear(buf_pool->twb_hash);
+    hash_table_free(buf_pool->twb_hash);
+    /* end */
 
 	buf_pool->allocator.~ut_allocator();
 }
@@ -5000,6 +5055,10 @@ buf_page_init_low(
 	HASH_INVALIDATE(bpage, hash);
 
 	ut_d(bpage->file_page_was_freed = FALSE);
+
+    /* mijin */
+    bpage->copy_target = false;
+    /* end */
 }
 
 /** Inits a page to the buffer buf_pool.
@@ -5881,6 +5940,30 @@ corrupt:
 		}
 
 		buf_pool->stat.n_pages_written++;
+
+        /* mijin: TODO: NEED TO BE FIXED!!!*/
+        if (bpage->copy_target) {
+            twb_meta_dir_t* entry = NULL;
+            ulint fold;
+
+            fold = bpage->id.fold();
+
+            rw_lock_s_lock(buf_pool->twb_hash_lock);
+            HASH_SEARCH(hash, buf_pool->copy_pool_cache, fold, copy_pool_meta_dir_t*, entry, ut_ad(1),
+                    entry->space == bpage->space && entry->offset == bpage->offset);
+            rw_lock_s_unlock(buf_pool->copy_pool_cache_hash_lock);
+
+            if (entry) {
+                rw_lock_x_lock(buf_pool->copy_pool_cache_hash_lock);
+                HASH_DELETE(copy_pool_meta_dir_t, hash, buf_pool->copy_pool_cache, fold, entry);
+                rw_lock_x_unlock(buf_pool->copy_pool_cache_hash_lock);
+
+                free(entry);
+            }
+        }
+        /* end */
+
+
 
 		/* We decide whether or not to evict the page from the
 		LRU list based on the flush_type.

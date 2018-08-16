@@ -312,6 +312,10 @@ extern ulong		srv_buf_pool_instances;
 extern const ulong	srv_buf_pool_instances_default;
 /** Number of locks to protect buf_pool->page_hash */
 extern ulong	srv_n_page_hash_locks;
+/* mijin */
+/** Number of locks to protect buf_pool->twb_hash */
+extern ulong	srv_n_twb_hash_locks;
+/* end */
 /** Scan depth for LRU flush batch i.e.: number of blocks scanned*/
 extern ulong	srv_LRU_scan_depth;
 /** Whether or not to flush neighbors of a block */

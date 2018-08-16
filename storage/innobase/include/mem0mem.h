@@ -60,6 +60,9 @@ buffer pool; the latter method is used for very big heaps */
 /** Different type of heaps in terms of which datastructure is using them */
 #define MEM_HEAP_FOR_BTR_SEARCH		(MEM_HEAP_BTR_SEARCH | MEM_HEAP_BUFFER)
 #define MEM_HEAP_FOR_PAGE_HASH		(MEM_HEAP_DYNAMIC)
+/* mijin */
+#define MEM_HEAP_FOR_TWB_HASH		(MEM_HEAP_DYNAMIC)
+/* end */
 #define MEM_HEAP_FOR_RECV_SYS		(MEM_HEAP_BUFFER)
 #define MEM_HEAP_FOR_LOCK_HEAP		(MEM_HEAP_BUFFER)
 

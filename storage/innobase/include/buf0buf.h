@@ -2294,7 +2294,7 @@ struct buf_pool_t{
                     /*!< the number of blocks in TWB */
     hash_table_t*   twb_hash;   /*!< hash table of twb_meta_dir_t,
                     indexed by (space_id, offset) */
-    //rw_lock_t*      twb_hash_lock;
+    rw_lock_t*      twb_hash_lock;
     buf_block_t*    twb_block_arr;  /*!< array to store pointers
                     to the buffer blocks which have been cached
                     to write_buf */

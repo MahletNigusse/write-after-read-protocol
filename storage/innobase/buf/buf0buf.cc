@@ -1854,14 +1854,16 @@ buf_pool_init_instance(
                 UNIV_PAGE_SIZE));
 
     /* Initialize hash structure for copy pool. */
-    srv_n_twb_hash_locks = static_cast<ulong>(
-            ut_2_power_up(srv_n_twb_hash_locks));
-
     buf_pool->twb_hash = ib_create(
             2 * buf_pool->total_entry,
             LATCH_ID_HASH_TABLE_RW_LOCK,
             srv_n_twb_hash_locks,
             MEM_HEAP_FOR_TWB_HASH);
+
+    buf_pool->twb_hash_lock = static_cast<rw_lock_t*>(
+            ut_malloc_nokey(sizeof(rw_lock_t)));
+	rw_lock_create(PFS_NOT_INSTRUMENTED, &buf_pool->twb_hash_lock,
+            SYNC_LEVEL_VARYING);
 
     /* Initialize a block and page structure. */
     buf_pool->twb_block_arr = static_cast<buf_block_t*>(

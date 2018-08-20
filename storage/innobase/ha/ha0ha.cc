@@ -60,7 +60,7 @@ ib_create(
 
 	ut_a(type == MEM_HEAP_FOR_BTR_SEARCH
 	     || type == MEM_HEAP_FOR_PAGE_HASH
-         /* mijin */
+        /* mijin */
 	     || type == MEM_HEAP_FOR_TWB_HASH
          /* end */);
 

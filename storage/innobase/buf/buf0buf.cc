@@ -1857,7 +1857,7 @@ buf_pool_init_instance(
     buf_pool->twb_hash = ib_create(
             2 * buf_pool->total_entry,
             LATCH_ID_HASH_TABLE_RW_LOCK,
-            srv_n_twb_hash_locks,
+            0,
             MEM_HEAP_FOR_TWB_HASH);
 
     buf_pool->twb_hash_lock = static_cast<rw_lock_t*>(
@@ -5953,19 +5953,17 @@ corrupt:
             rw_lock_s_lock(buf_pool->twb_hash_lock);
             HASH_SEARCH(hash, buf_pool->copy_pool_cache, fold, copy_pool_meta_dir_t*, entry, ut_ad(1),
                     entry->space == bpage->space && entry->offset == bpage->offset);
-            rw_lock_s_unlock(buf_pool->copy_pool_cache_hash_lock);
+            rw_lock_s_unlock(buf_pool->twb_hash_lock);
 
             if (entry) {
-                rw_lock_x_lock(buf_pool->copy_pool_cache_hash_lock);
+                rw_lock_x_lock(buf_pool->twb_hash_lock);
                 HASH_DELETE(copy_pool_meta_dir_t, hash, buf_pool->copy_pool_cache, fold, entry);
-                rw_lock_x_unlock(buf_pool->copy_pool_cache_hash_lock);
+                rw_lock_x_unlock(buf_pool->twb_hash_lock);
 
                 free(entry);
             }
         }
         /* end */
-
-
 
 		/* We decide whether or not to evict the page from the
 		LRU list based on the flush_type.
@@ -5973,7 +5971,10 @@ corrupt:
 		* BUF_FLUSH_LRU: always evict
 		* BUF_FLUSH_SINGLE_PAGE: eviction preference is passed
 		by the caller explicitly. */
-		if (buf_page_get_flush_type(bpage) == BUF_FLUSH_LRU) {
+		if (buf_page_get_flush_type(bpage) == BUF_FLUSH_LRU
+            /* mijin */
+            && !bpage->copy_target
+            /* end */) {
 			evict = true;
 		}
 

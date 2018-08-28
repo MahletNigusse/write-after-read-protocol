@@ -19709,13 +19709,6 @@ static MYSQL_SYSVAR_ULONG(page_hash_locks, srv_n_page_hash_locks,
   "Number of rw_locks protecting buffer pool page_hash. Rounded up to the next power of 2",
   NULL, NULL, 16, 1, MAX_PAGE_HASH_LOCKS, 0);
 
-/* mijin */
-static MYSQL_SYSVAR_ULONG(twb_hash_locks, srv_n_twb_hash_locks,
-  PLUGIN_VAR_OPCMDARG | PLUGIN_VAR_READONLY,
-  "Number of rw_locks protecting buffer pool twb_hash. Rounded up to the next power of 2",
-  NULL, NULL, 16, 1, 1024, 0);
-/* end */
-
 static MYSQL_SYSVAR_ULONG(doublewrite_batch_size, srv_doublewrite_batch_size,
   PLUGIN_VAR_OPCMDARG | PLUGIN_VAR_READONLY,
   "Number of pages reserved in doublewrite buffer for batch flushing",

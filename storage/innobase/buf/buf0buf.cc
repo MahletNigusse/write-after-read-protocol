@@ -5943,7 +5943,7 @@ corrupt:
 
 		buf_pool->stat.n_pages_written++;
 
-        /* mijin: TODO: NEED TO BE FIXED!!!*/
+        /* mijin */
         if (bpage->copy_target) {
             twb_meta_dir_t* entry = NULL;
             ulint fold;
@@ -5951,13 +5951,13 @@ corrupt:
             fold = bpage->id.fold();
 
             rw_lock_s_lock(buf_pool->twb_hash_lock);
-            HASH_SEARCH(hash, buf_pool->copy_pool_cache, fold, copy_pool_meta_dir_t*, entry, ut_ad(1),
+            HASH_SEARCH(hash, buf_pool->copy_pool_cache, fold, twb_meta_dir_t*, entry, ut_ad(1),
                     entry->space == bpage->space && entry->offset == bpage->offset);
             rw_lock_s_unlock(buf_pool->twb_hash_lock);
 
             if (entry) {
                 rw_lock_x_lock(buf_pool->twb_hash_lock);
-                HASH_DELETE(copy_pool_meta_dir_t, hash, buf_pool->copy_pool_cache, fold, entry);
+                HASH_DELETE(twb_meta_dir_t, hash, buf_pool->copy_pool_cache, fold, entry);
                 rw_lock_x_unlock(buf_pool->twb_hash_lock);
 
                 free(entry);

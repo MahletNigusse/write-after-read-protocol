@@ -1707,17 +1707,7 @@ buf_LRU_remove_block(
 
     /* mijin: TODO: need to fix this part! */
     if (bpage->copy_target) {
-        buf_flush_list_mutex_enter(buf_pool);
-        buf_pool->flush_hp.adjust(bpage);
-
-        UT_LIST_REMOVE(buf_pool->flush_list, bpage);
-
-        if ((buf_pool->flush_list_hp == bpage)) {
-            buf_pool->flush_list_hp = bpage;
-            MONITOR_INC(MONITOR_FLUSH_HP_RESCAN);
-        }
-
-        buf_flush_list_mutex_exit(buf_pool);
+        buf_flush_remove(bpage);
     }
     /* end */
 
@@ -1996,7 +1986,11 @@ buf_LRU_free_page(
 		/* Do not completely free dirty blocks. */
 
 		if (bpage->oldest_modification) {
-			goto func_exit;
+            /* mijin */
+            if (!bpage->copy_target) {
+			    goto func_exit;
+            }
+            /* end */
 		}
 	} else if (bpage->oldest_modification > 0
 		   && buf_page_get_state(bpage) != BUF_BLOCK_FILE_PAGE) {
@@ -2263,6 +2257,12 @@ buf_LRU_block_free_non_file_page(
 				    false));
 	}
 
+    /* mijin */
+    if ((&block->page)->copy_target) {
+        (&block->page)->copy_target = false;
+    }
+    /* end */
+
 	if (buf_pool->curr_size < buf_pool->old_size
 	    && UT_LIST_GET_LEN(buf_pool->withdraw) < buf_pool->withdraw_target
 	    && buf_block_will_withdrawn(buf_pool, block)) {
@@ -2379,11 +2379,15 @@ buf_LRU_block_remove_hashed(
 		}
 		/* fall through */
 	case BUF_BLOCK_ZIP_PAGE:
-		ut_a(bpage->oldest_modification == 0);
-		if (bpage->size.is_compressed()) {
-			UNIV_MEM_ASSERT_W(bpage->zip.data,
-					  bpage->size.physical());
-		}
+        /* mijin */
+        if (!bpage->copy_target) {
+            ut_a(bpage->oldest_modification == 0);
+            if (bpage->size.is_compressed()) {
+                UNIV_MEM_ASSERT_W(bpage->zip.data,
+                        bpage->size.physical());
+            }
+        }
+        /* end */
 		break;
 	case BUF_BLOCK_POOL_WATCH:
 	case BUF_BLOCK_ZIP_DIRTY:

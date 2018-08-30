@@ -669,7 +669,11 @@ buf_flush_remove(
 #endif /* UNIV_DEBUG || UNIV_BUF_DEBUG */
 		break;
 	case BUF_BLOCK_FILE_PAGE:
-		UT_LIST_REMOVE(buf_pool->flush_list, bpage);
+        /* mijin */
+        if (!bpage->copy_target) {
+            UT_LIST_REMOVE(buf_pool->flush_list, bpage);
+        }
+        /* end */
 		break;
 	}
 

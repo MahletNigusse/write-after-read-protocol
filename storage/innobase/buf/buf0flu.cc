@@ -2269,32 +2269,104 @@ buf_flush_LRU_list(
 
 	ut_ad(buf_pool);
 
-	/* srv_LRU_scan_depth can be arbitrarily large value.
-	We cap it with current LRU size. */
-	buf_pool_mutex_enter(buf_pool);
-	scan_depth = UT_LIST_GET_LEN(buf_pool->LRU);
-	if (buf_pool->curr_size < buf_pool->old_size
-	    && buf_pool->withdraw_target > 0) {
-		withdraw_depth = buf_pool->withdraw_target
-				 - UT_LIST_GET_LEN(buf_pool->withdraw);
-	} else {
-		withdraw_depth = 0;
-	}
-	buf_pool_mutex_exit(buf_pool);
+    /* mijin */
+try_again:
+    buf_pool_mutex_enter(buf_pool);
+    
+    bool last = false;
 
-	if (withdraw_depth > srv_LRU_scan_depth) {
-		scan_depth = ut_min(withdraw_depth, scan_depth);
-	} else {
-		scan_depth = ut_min(static_cast<ulint>(srv_LRU_scan_depth),
-				    scan_depth);
-	}
+    if (buf_pool->need_to_flush_twb) {
+        if (buf_pool->batch_running) {
+            /* Another thread is running the batch right now. Wait
+               for it to finish. */
+            ib_int64_t  sig_count = os_event_reset(buf_pool->b_event);
+            buf_pool_mutex_exit(buf_pool);
 
-	/* Currently one of page_cleaners is the only thread
-	that can trigger an LRU flush at the same time.
-	So, it is not possible that a batch triggered during
-	last iteration is still running, */
-	buf_flush_do_batch(buf_pool, BUF_FLUSH_LRU, scan_depth,
-			   0, &n_flushed);
+            os_event_wait_low(buf_pool->b_event, sig_count);
+            goto try_again;
+        }
+
+        buf_pool->flush_running = true;
+
+        for (ulint i = 0; i < buf_pool->first_free; i++) {
+
+            buf_block_t* block = &buf_pool->twb_block_arr[i];
+            buf_page_t* bpage;
+
+            /* Copy buffer frame from write_buf to tmp_buf. */
+            memcpy(block->frame, buf_pool->write_buf + (i * UNIV_PAGE_SIZE), UNIV_PAGE_SIZE);
+
+            /* Extract a page from the buffer frame. */
+            bpage = &block->page;
+
+            bpage->id.space() = mach_read_from_4(block->frame + FIL_PAGE_ARCH_LOG_NO_OR_SPACE_ID);
+            bpage->id.page_no() = mach_read_from_4(block->frame + FIL_PAGE_OFFSET);
+
+            /* TODO: need to fix lsn part!! */
+            bpage->newest_modification = mach_read_from_8(block->frame + FIL_PAGE_LSN);
+            bpage->oldest_modification = mach_read_from_8(block->frame + FIL_PAGE_LSN);
+            bpage->state = BUF_BLOCK_FILE_PAGE;
+            bpage->copy_target = true;
+            bpage->buf_pool_index = buf_pool->instance_no;
+
+            if ((i + 1) == buf_pool->first_free) {
+                last = true;
+            }
+
+            /* Flush the target page. */
+            mutex_enter(&block->mutex);
+
+            if (buf_flush_page(buf_pool, bpage, BUF_FLUSH_LRU, false)) {
+                n_flushed++;
+            } else {
+                mutex_exit(&block->mutex);
+            }
+
+            if (last) {
+                buf_dblwr_flush_buffered_writes();
+                last = false;
+            }
+
+            buf_pool_mutex_enter(buf_pool);
+        }
+    
+        buf_pool->first_free = 0;
+        buf_pool->need_to_flush_twb = false;
+
+        buf_pool->flush_running = false;
+        os_event_set(buf_pool->f_event);
+
+        buf_pool_mutex_exit(buf_pool);
+    } else {
+        /* end */
+
+        /* srv_LRU_scan_depth can be arbitrarily large value.
+           We cap it with current LRU size. */
+        buf_pool_mutex_enter(buf_pool);
+        scan_depth = UT_LIST_GET_LEN(buf_pool->LRU);
+        if (buf_pool->curr_size < buf_pool->old_size
+                && buf_pool->withdraw_target > 0) {
+            withdraw_depth = buf_pool->withdraw_target
+                - UT_LIST_GET_LEN(buf_pool->withdraw);
+        } else {
+            withdraw_depth = 0;
+        }
+        buf_pool_mutex_exit(buf_pool);
+
+        if (withdraw_depth > srv_LRU_scan_depth) {
+            scan_depth = ut_min(withdraw_depth, scan_depth);
+        } else {
+            scan_depth = ut_min(static_cast<ulint>(srv_LRU_scan_depth),
+                    scan_depth);
+        }
+
+        /* Currently one of page_cleaners is the only thread
+           that can trigger an LRU flush at the same time.
+           So, it is not possible that a batch triggered during
+           last iteration is still running, */
+        buf_flush_do_batch(buf_pool, BUF_FLUSH_LRU, scan_depth,
+                0, &n_flushed);
+    }
 
 	return(n_flushed);
 }

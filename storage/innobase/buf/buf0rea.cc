@@ -162,6 +162,28 @@ buf_read_page_low(
 
 	ut_ad(buf_page_in_file(bpage));
 
+    /* mijin: TODO: Need to fix read part  */
+    buf_pool_t* buf_pool = buf_pool_get(page_id);
+
+    if (buf_pool->need_to_flush_twb) {
+        ulint fold = page_id.fold();
+        twb_meta_dir_t* entry;
+
+check:
+        entry = NULL;
+
+        rw_lock_s_lock(buf_pool->twb_hash_lock);
+        HASH_SEARCH(hash, buf_pool->twb_hash, fold, twb_meta_dir_t*, entry, ut_ad(1),
+                entry->space == page_id.space() && entry->offset == page_id.page_no());
+        rw_lock_s_unlock(buf_pool->twb_hash_lock);
+
+        if (entry) {
+            os_thread_sleep(100000);
+            goto check;
+        }
+    }
+    /* end */
+
 	if (sync) {
 		thd_wait_begin(NULL, THD_WAIT_DISKIO);
 	}

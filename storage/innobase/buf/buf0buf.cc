@@ -5951,13 +5951,13 @@ corrupt:
             fold = bpage->id.fold();
 
             rw_lock_s_lock(buf_pool->twb_hash_lock);
-            HASH_SEARCH(hash, buf_pool->copy_pool_cache, fold, twb_meta_dir_t*, entry, ut_ad(1),
-                    entry->space == bpage->space && entry->offset == bpage->offset);
+            HASH_SEARCH(hash, buf_pool->twb_hash, fold, twb_meta_dir_t*, entry, ut_ad(1),
+                    entry->space == bpage->id.space() && entry->offset == bpage->id.page_no());
             rw_lock_s_unlock(buf_pool->twb_hash_lock);
 
             if (entry) {
                 rw_lock_x_lock(buf_pool->twb_hash_lock);
-                HASH_DELETE(twb_meta_dir_t, hash, buf_pool->copy_pool_cache, fold, entry);
+                HASH_DELETE(twb_meta_dir_t, hash, buf_pool->twb_hash, fold, entry);
                 rw_lock_x_unlock(buf_pool->twb_hash_lock);
 
                 free(entry);

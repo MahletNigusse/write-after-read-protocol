@@ -2305,6 +2305,7 @@ struct buf_pool_t{
 struct twb_meta_dir_t {
     ib_uint32_t     space;  /*!< tablespace id */
     ib_uint32_t     offset; /*!< page number */
+    ulint           twb_idx;/*!< index number in TWB */
     twb_meta_dir_t* hash;   /*!< node used in chaining to
                     buf_pool->twb_hash */
 }; 

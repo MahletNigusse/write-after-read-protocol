@@ -1862,7 +1862,7 @@ buf_pool_init_instance(
 
     buf_pool->twb_hash_lock = static_cast<rw_lock_t*>(
             ut_malloc_nokey(sizeof(rw_lock_t)));
-	rw_lock_create(PFS_NOT_INSTRUMENTED, &buf_pool->twb_hash_lock,
+	rw_lock_create(PFS_NOT_INSTRUMENTED, buf_pool->twb_hash_lock,
             SYNC_LEVEL_VARYING);
 
     /* Initialize a block and page structure. */
@@ -1871,11 +1871,11 @@ buf_pool_init_instance(
 
     for (i = 0; i < buf_pool->total_entry; i++) {
         mutex_create(LATCH_ID_BUF_BLOCK_MUTEX,
-                &(buf_pool->copy_block_arr[i]).mutex);
+                &(buf_pool->twb_block_arr[i]).mutex);
         rw_lock_create(PFS_NOT_INSTRUMENTED,
-                &(buf_pool->copy_block_arr[i]).lock, SYNC_LEVEL_VARYING);
+                &(buf_pool->twb_block_arr[i]).lock, SYNC_LEVEL_VARYING);
 
-        assert(!posix_memalign((void **) &(buf_pool->copy_block_arr[i]).frame,
+        assert(!posix_memalign((void **) &(buf_pool->twb_block_arr[i]).frame,
                     4096, UNIV_PAGE_SIZE));
     }
     /* end */

@@ -2279,7 +2279,7 @@ try_again:
         if (buf_pool->batch_running) {
             /* Another thread is running the batch right now. Wait
                for it to finish. */
-            ib_int64_t  sig_count = os_event_reset(buf_pool->b_event);
+            int64_t  sig_count = os_event_reset(buf_pool->b_event);
             buf_pool_mutex_exit(buf_pool);
 
             os_event_wait_low(buf_pool->b_event, sig_count);
@@ -2299,8 +2299,8 @@ try_again:
             /* Extract a page from the buffer frame. */
             bpage = &block->page;
 
-            bpage->id.space() = mach_read_from_4(block->frame + FIL_PAGE_ARCH_LOG_NO_OR_SPACE_ID);
-            bpage->id.page_no() = mach_read_from_4(block->frame + FIL_PAGE_OFFSET);
+            bpage->id.reset(mach_read_from_4(block->frame + FIL_PAGE_ARCH_LOG_NO_OR_SPACE_ID),
+                            mach_read_from_4(block->frame + FIL_PAGE_OFFSET));
 
             /* TODO: need to fix lsn part!! */
             bpage->newest_modification = mach_read_from_8(block->frame + FIL_PAGE_LSN);

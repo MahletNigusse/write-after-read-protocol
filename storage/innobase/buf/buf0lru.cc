@@ -1421,7 +1421,7 @@ loop:
     if (buf_pool->flush_running) {
         /* Another thread is running the flush right now. Wait
            for it to finish. */
-        ib_int64_t  sig_count = os_event_reset(buf_pool->f_event);
+        int64_t  sig_count = os_event_reset(buf_pool->f_event);
         buf_pool_mutex_exit(buf_pool);
 
         os_event_wait_low(buf_pool->f_event, sig_count);

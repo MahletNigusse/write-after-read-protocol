@@ -1413,7 +1413,7 @@ loop:
     buf_pool_mutex_enter(buf_pool);
 
     if (buf_pool->batch_running
-            /* || (buf_pool->first_free == buf_pool->total_entry)*/) {
+        || (buf_pool->first_free == buf_pool->total_entry)) {
         buf_pool_mutex_exit(buf_pool);
         goto loop;
     }
@@ -1438,7 +1438,8 @@ loop:
     buf_pool->batch_running = true;
 
     for (buf_page_t* bpage = buf_pool->lru_scan_itr.start();
-            bpage != NULL && scanned < srv_LRU_scan_depth /*&& buf_pool->first_free < buf_pool->total_entry*/;
+            bpage != NULL && scanned < srv_LRU_scan_depth 
+            && buf_pool->first_free < buf_pool->total_entry;
             ++scanned, bpage = buf_pool->lru_scan_itr.get()) {
 
         buf_page_t* prev = UT_LIST_GET_PREV(LRU, bpage);
@@ -1477,6 +1478,7 @@ loop:
 
             new_entry->space = space;
             new_entry->offset = offset;
+            new_entry->twb_idx = first_free;
 
             rw_lock_x_lock(buf_pool->twb_hash_lock);
             HASH_INSERT(twb_meta_dir_t, hash, buf_pool->twb_hash, fold, new_entry);

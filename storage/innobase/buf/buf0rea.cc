@@ -178,6 +178,8 @@ check:
         rw_lock_s_unlock(buf_pool->twb_hash_lock);
 
         if (entry) {
+            fprintf(stderr, "try to read a page in TWB: (%u, %u, %lu)\n",
+                    entry->space, entry->offset, entry->twb_idx);
             os_thread_sleep(100000);
             goto check;
         }

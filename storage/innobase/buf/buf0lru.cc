@@ -1460,6 +1460,7 @@ loop:
         ib_uint32_t space = bpage->id.space();
         ib_uint32_t offset = bpage->id.page_no();
         ulint fold = bpage->id.fold();
+        ulint lsn = bpage->newest_modification;
 
         first_free = buf_pool->first_free;
         buf_pool->first_free++;
@@ -1494,6 +1495,8 @@ loop:
     os_event_set(buf_pool->b_event);
 
     buf_pool_mutex_exit(buf_pool);
+
+    log_write_up_to(lsn, true);               
 
     if (total_copied) {
         goto loop;

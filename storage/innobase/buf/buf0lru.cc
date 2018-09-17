@@ -1710,7 +1710,7 @@ buf_LRU_remove_block(
 	UT_LIST_REMOVE(buf_pool->LRU, bpage);
 	ut_d(bpage->in_LRU_list = FALSE);
 
-    /* mijin: TODO: need to fix this part! */
+    /* mijin */
     if (bpage->copy_target) {
         buf_flush_remove(bpage);
     }

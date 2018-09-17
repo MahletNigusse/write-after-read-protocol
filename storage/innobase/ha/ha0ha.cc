@@ -82,7 +82,7 @@ ib_create(
 	}
 
 	if (type == MEM_HEAP_FOR_PAGE_HASH
-        /* mijin*/
+        /* mijin */
         || type == MEM_HEAP_FOR_TWB_HASH
         /* end */) {
 		/* We create a hash table protected by rw_locks for

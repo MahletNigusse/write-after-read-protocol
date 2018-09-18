@@ -2288,6 +2288,7 @@ try_again:
 
         buf_pool->flush_running = true;
 
+        fprintf(stderr, "page_cleaner(%lu): %lu\n", buf_pool->instance_no, buf_pool->first_free);
         for (ulint i = 0; i < buf_pool->first_free; i++) {
 
             buf_block_t* block = &buf_pool->twb_block_arr[i];
@@ -2330,6 +2331,7 @@ try_again:
             buf_pool_mutex_enter(buf_pool);
         }
     
+        fprintf(stderr, "page_cleaner finished(%lu): %lu\n", buf_pool->instance_no, n_flushed);
         buf_pool->first_free = 0;
         buf_pool->need_to_flush_twb = false;
 

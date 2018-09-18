@@ -1431,7 +1431,8 @@ loop:
     ulint scanned = 0;
     ulint total_copied = 0;
     ulint failed = 0;
-    ulint first_free;
+    ulint first_free = 0;
+    ulint lsn = 0;
     bool    evict_zip;
 
     buf_pool->need_to_flush_twb = true;
@@ -1460,7 +1461,7 @@ loop:
         ib_uint32_t space = bpage->id.space();
         ib_uint32_t offset = bpage->id.page_no();
         ulint fold = bpage->id.fold();
-        ulint lsn = bpage->newest_modification;
+        lsn = bpage->newest_modification;
 
         first_free = buf_pool->first_free;
         buf_pool->first_free++;
@@ -1496,8 +1497,11 @@ loop:
 
     buf_pool_mutex_exit(buf_pool);
 
+    fprintf(stderr, "before lsn(%lu): %lu, %lu\n", buf_pool->instance_no, total_copied, failed);
+
     log_write_up_to(lsn, true);               
 
+    fprintf(stderr, "after lsn(%lu): %lu, %lu\n", buf_pool->instance_no, total_copied, failed);
     if (total_copied) {
         goto loop;
     }

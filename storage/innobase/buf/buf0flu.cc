@@ -2340,6 +2340,7 @@ try_again:
 
         buf_pool_mutex_exit(buf_pool);
     } else {
+        fprintf(stderr, "original flush(%lu)\n", buf_pool->instance_no);
         /* end */
 
         /* srv_LRU_scan_depth can be arbitrarily large value.
@@ -2368,9 +2369,13 @@ try_again:
            last iteration is still running, */
         buf_flush_do_batch(buf_pool, BUF_FLUSH_LRU, scan_depth,
                 0, &n_flushed);
+        
+        /* mijin */
+        fprintf(stderr, "original flush finished(%lu) = %lu\n", buf_pool->instance_no, n_flushed);
+        /* end */
     }
 
-	return(n_flushed);
+    return(n_flushed);
 }
 
 /*********************************************************************//**

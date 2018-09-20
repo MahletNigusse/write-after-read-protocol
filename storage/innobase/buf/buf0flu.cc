@@ -2345,7 +2345,7 @@ try_again:
 
         /* srv_LRU_scan_depth can be arbitrarily large value.
            We cap it with current LRU size. */
-        buf_pool_mutex_enter(buf_pool);
+        //buf_pool_mutex_enter(buf_pool);
         scan_depth = UT_LIST_GET_LEN(buf_pool->LRU);
         if (buf_pool->curr_size < buf_pool->old_size
                 && buf_pool->withdraw_target > 0) {

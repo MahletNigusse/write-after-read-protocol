@@ -1412,6 +1412,8 @@ loop:
     /* mijin */
     buf_pool_mutex_enter(buf_pool);
 
+    fprintf(stderr, "war mode start..(%lu)\n", buf_pool->instance_no);
+
     if (buf_pool->batch_running
         || (buf_pool->first_free == buf_pool->total_entry)) {
         buf_pool_mutex_exit(buf_pool);
@@ -1474,6 +1476,12 @@ loop:
         bpage->copy_target = true;
         evict_zip = !buf_LRU_evict_from_unzip_LRU(buf_pool);;
 
+        /*buf_pool_mutex_exit(buf_pool);
+
+        log_write_up_to(lsn, true);               
+        
+        buf_pool_mutex_enter(buf_pool);
+        */
         /* Free the target page from the buffer pool. */
         if (buf_LRU_free_page(bpage, evict_zip)) {
             twb_meta_dir_t* new_entry = (twb_meta_dir_t*) malloc(sizeof(twb_meta_dir_t));
@@ -1487,6 +1495,9 @@ loop:
             rw_lock_x_unlock(buf_pool->twb_hash_lock);
 
             total_copied++;
+
+            fprintf(stderr, "copied page(%lu) = (%u, %u) %lu\n",
+                    buf_pool->instance_no, space, offset, first_free);
         } else {
             failed++;
         }
@@ -1497,11 +1508,8 @@ loop:
 
     buf_pool_mutex_exit(buf_pool);
 
-    fprintf(stderr, "before lsn(%lu): %lu, %lu\n", buf_pool->instance_no, total_copied, failed);
-
-    log_write_up_to(lsn, true);               
-
-    fprintf(stderr, "after lsn(%lu): %lu, %lu\n", buf_pool->instance_no, total_copied, failed);
+    fprintf(stderr, "total copied(%lu): %lu, %lu\n", buf_pool->instance_no, total_copied, failed);
+    
     if (total_copied) {
         goto loop;
     }

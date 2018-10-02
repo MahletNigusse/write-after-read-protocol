@@ -5060,6 +5060,7 @@ buf_page_init_low(
 
     /* mijin */
     bpage->copy_target = false;
+    bpage->flush_target = false;
     /* end */
 }
 
@@ -5944,7 +5945,7 @@ corrupt:
 		buf_pool->stat.n_pages_written++;
 
         /* mijin */
-        if (bpage->copy_target) {
+        if (bpage->flush_target) {
             twb_meta_dir_t* entry = NULL;
             ulint fold;
 
@@ -5973,7 +5974,7 @@ corrupt:
 		by the caller explicitly. */
 		if (buf_page_get_flush_type(bpage) == BUF_FLUSH_LRU
             /* mijin */
-            && !bpage->copy_target
+            && !bpage->flush_target
             /* end */) {
 			evict = true;
 		}

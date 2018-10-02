@@ -180,8 +180,29 @@ check:
         if (entry) {
             fprintf(stderr, "try to read a page in TWB: (%u, %u, %lu)\n",
                     entry->space, entry->offset, entry->twb_idx);
+/*            memcpy(((buf_block_t*) bpage)->frame,
+                    buf_pool->write_buf + UNIV_PAGE_SIZE * entry->twb_idx,
+                    UNIV_PAGE_SIZE);
+            
+            rw_lock_x_lock(buf_pool->twb_hash_lock);
+            HASH_DELETE(twb_meta_dir_t, hash, buf_pool->twb_hash, fold, entry);
+            rw_lock_x_unlock(buf_pool->twb_hash_lock);
+
+            free(entry);
+  */     
             os_thread_sleep(100000);
             goto check;
+#if 0
+            if (sync) {
+                /* The i/o is already completed when we arrive from
+                   fil_read */
+                if (!buf_page_io_complete(bpage)) {
+                    return(0);
+                }
+            }
+
+            return(1);
+#endif
         }
     }
     /* end */

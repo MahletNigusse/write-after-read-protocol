@@ -1691,6 +1691,8 @@ public:
     /* mijin */
     ibool       copy_target;    /*!< TRUE if the block is a target
                     block to be copied to TWB */ 
+    ibool       flush_target;    /*!< TRUE if the block is a target
+                    block to be flushed from TWB */ 
     /* end */
 };
 

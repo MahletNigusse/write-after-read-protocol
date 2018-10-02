@@ -1013,7 +1013,14 @@ try_again:
 
 		/* Check that the actual page in the buffer pool is
 		not corrupt and the LSN values are sane. */
-		buf_dblwr_check_block(block);
+		/* mijin */
+        if (((buf_page_t*) block)->flush_target) {
+            fprintf(stderr, "dwb twb block check = (%u, %u)\n",
+                    ((buf_page_t*) block)->id.space(),
+                    ((buf_page_t*) block)->id.page_no());
+        } else {
+            buf_dblwr_check_block(block);
+        }
 
 		/* Check that the page as written to the doublewrite
 		buffer has sane LSN values. */

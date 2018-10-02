@@ -670,7 +670,7 @@ buf_flush_remove(
 		break;
 	case BUF_BLOCK_FILE_PAGE:
         /* mijin */
-        if (!bpage->copy_target) {
+        if (!bpage->flush_target) {
             UT_LIST_REMOVE(buf_pool->flush_list, bpage);
         }
         /* end */
@@ -1770,6 +1770,13 @@ buf_do_flush_list_batch(
 
 		buf_page_t*	prev;
 
+        /* mijin */
+        if (bpage->oldest_modification <= 0) {
+            fprintf(stderr, "ERROR: (%u, %u)\n",
+                    bpage->id.space(),
+                    bpage->id.page_no());
+        }
+        /* end */
 		ut_a(bpage->oldest_modification > 0);
 		ut_ad(bpage->in_flush_list);
 
@@ -2307,7 +2314,7 @@ try_again:
             bpage->newest_modification = mach_read_from_8(block->frame + FIL_PAGE_LSN);
             bpage->oldest_modification = mach_read_from_8(block->frame + FIL_PAGE_LSN);
             bpage->state = BUF_BLOCK_FILE_PAGE;
-            bpage->copy_target = true;
+            bpage->flush_target = true;
             bpage->buf_pool_index = buf_pool->instance_no;
 
             if ((i + 1) == buf_pool->first_free) {

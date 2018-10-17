@@ -1482,6 +1482,7 @@ loop:
         
         buf_pool_mutex_enter(buf_pool);
         */
+
         /* Free the target page from the buffer pool. */
         if (buf_LRU_free_page(bpage, evict_zip)) {
             twb_meta_dir_t* new_entry = (twb_meta_dir_t*) malloc(sizeof(twb_meta_dir_t));
@@ -2033,7 +2034,7 @@ func_exit:
 	DBUG_PRINT("ib_buf", ("free page " UINT32PF ":" UINT32PF,
 			      bpage->id.space(), bpage->id.page_no()));
 
-        ut_ad(rw_lock_own(hash_lock, RW_LOCK_X));
+    ut_ad(rw_lock_own(hash_lock, RW_LOCK_X));
 	ut_ad(buf_page_can_relocate(bpage));
 
 	if (!buf_LRU_block_remove_hashed(bpage, zip)) {
@@ -2212,6 +2213,13 @@ func_exit:
 
 	buf_LRU_block_free_hashed_page((buf_block_t*) bpage);
 
+    /* mijin */
+    if (bpage->copy_target) {
+        ib::info() << "completely freed" << bpage->id.space()
+            << bpage->id.page_no() << buf_pool->instance_no;
+    }
+    /* end */
+
 	return(true);
 }
 
@@ -2275,9 +2283,9 @@ buf_LRU_block_free_non_file_page(
 	}
 
     /* mijin */
-    if ((&block->page)->copy_target) {
+    /*if ((&block->page)->copy_target) {
         (&block->page)->copy_target = false;
-    }
+    }*/
     /* end */
 
 	if (buf_pool->curr_size < buf_pool->old_size

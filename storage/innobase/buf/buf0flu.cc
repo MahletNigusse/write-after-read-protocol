@@ -2281,6 +2281,7 @@ try_again:
     buf_pool_mutex_enter(buf_pool);
     
     bool last = false;
+    ulint failed = 0;
 
     if (buf_pool->need_to_flush_twb) {
         if (buf_pool->batch_running) {
@@ -2327,6 +2328,7 @@ try_again:
             if (buf_flush_page(buf_pool, bpage, BUF_FLUSH_LRU, false)) {
                 n_flushed++;
             } else {
+                failed++;
                 mutex_exit(&block->mutex);
             }
 
@@ -2337,8 +2339,9 @@ try_again:
 
             buf_pool_mutex_enter(buf_pool);
         }
-    
-        fprintf(stderr, "page_cleaner finished(%lu): %lu\n", buf_pool->instance_no, n_flushed);
+   
+        ib::info() << "page_cleaner finished(" << buf_pool->instance_no
+            << "): " << n_flushed << "," << failed;
         buf_pool->first_free = 0;
         buf_pool->need_to_flush_twb = false;
 

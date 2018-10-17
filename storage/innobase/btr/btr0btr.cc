@@ -2296,7 +2296,17 @@ btr_attach_half_pages(
 	if (next_block) {
 #ifdef UNIV_BTR_DEBUG
 		ut_a(page_is_comp(next_block->frame) == page_is_comp(page));
-		ut_a(btr_page_get_prev(next_block->frame, mtr)
+        
+        /* mijin */
+        if (btr_page_get_prev(next_block->frame, mtr)
+                != page_get_page_no(page)) {
+            ib::info() << "ERROR: (" << btr_page_get_prev(next_block->frame, mtr)
+                << ") != (" << page_get_space_id(page) <<
+                ", " << page_get_page_no(page);
+        }
+        /* end */
+        
+        ut_a(btr_page_get_prev(next_block->frame, mtr)
 		     == page_get_page_no(page));
 #endif /* UNIV_BTR_DEBUG */
 

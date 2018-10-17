@@ -324,10 +324,9 @@ btr_cur_latch_leaves(
             if (btr_page_get_next(
                         latch_leaves.blocks[0]->frame, mtr)
                     != page_get_page_no(page)) {
-                fprintf(stderr, "ERROR: (%lu) != (%lu, %lu)\n",
-                        btr_page_get_next(latch_leaves.blocks[0]->frame, mtr),
-                        page_get_space_id(page),
-                        page_get_page_no(page));
+                ib::info() << "ERROR: (" << btr_page_get_next(latch_leaves.blocks[0]->frame, mtr)
+                    << ") != (" << page_get_space_id(page) << 
+                    ", " << page_get_page_no(page);
             }
             /* end */
 			ut_a(btr_page_get_next(
@@ -361,10 +360,9 @@ btr_cur_latch_leaves(
             /* mijin */
             if (btr_page_get_prev(get_block->frame, mtr)
 			     != page_get_page_no(page)) {
-                fprintf(stderr, "ERROR: (%lu) != (%lu, %lu)\n",
-                        btr_page_get_prev(get_block->frame, mtr),
-                        page_get_space_id(page),
-                        page_get_page_no(page));
+                ib::info() << "ERROR: (" << btr_page_get_prev(get_block->frame, mtr)
+                    << ") != (" << page_get_space_id(page) << ","
+                    << page_get_page_no(page) << ")";
             }
             /* end */
 

@@ -2283,9 +2283,9 @@ buf_LRU_block_free_non_file_page(
 	}
 
     /* mijin */
-    /*if ((&block->page)->copy_target) {
+    if ((&block->page)->copy_target) {
         (&block->page)->copy_target = false;
-    }*/
+    }
     /* end */
 
 	if (buf_pool->curr_size < buf_pool->old_size

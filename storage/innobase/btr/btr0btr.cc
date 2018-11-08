@@ -2302,7 +2302,7 @@ btr_attach_half_pages(
                 != page_get_page_no(page)) {
             ib::info() << "ERROR: (" << btr_page_get_prev(next_block->frame, mtr)
                 << ") != (" << page_get_space_id(page) <<
-                ", " << page_get_page_no(page);
+                ", " << page_get_page_no(page) << ")";
         }
         /* end */
         

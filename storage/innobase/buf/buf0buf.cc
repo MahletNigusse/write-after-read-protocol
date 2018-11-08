@@ -4189,6 +4189,13 @@ loop:
 
 	if (block == NULL) {
 		block = (buf_block_t*) buf_page_hash_get_low(buf_pool, page_id);
+
+        /* mijin */
+        if (block) {
+            fprintf(stderr, "Page in buf_pool: (%u, %u)\n",
+                    page_id.space(), page_id.page_no());
+        }
+        /* end */
 	}
 
 	if (!block || buf_pool_watch_is_sentinel(buf_pool, &block->page)) {
@@ -4197,6 +4204,10 @@ loop:
 	}
 
 	if (block == NULL) {
+        /* mijin */
+        fprintf(stderr, "Page not in buf_pool: (%u, %u)\n",
+                page_id.space(), page_id.page_no());
+        /* end */
 		/* Page not in buf_pool: needs to be read from file */
 
 		if (mode == BUF_GET_IF_IN_POOL_OR_WATCH) {

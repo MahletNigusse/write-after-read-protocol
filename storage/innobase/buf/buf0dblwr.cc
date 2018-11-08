@@ -1018,7 +1018,7 @@ try_again:
             fprintf(stderr, "dwb twb block check = (%u, %u)\n",
                     ((buf_page_t*) block)->id.space(),
                     ((buf_page_t*) block)->id.page_no());
-        } else {
+        } else {/* end */
             buf_dblwr_check_block(block);
         }
 

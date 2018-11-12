@@ -2318,6 +2318,11 @@ try_again:
             bpage->flush_target = true;
             bpage->buf_pool_index = buf_pool->instance_no;
 
+            fprintf(stderr, "before flushing = (%u, %u) %lu %lu\n",
+                    bpage->id.space(), bpage->id.page_no(),
+                    mach_read_from_4(block->frame + FIL_PAGE_PREV),
+                    mach_read_from_4(block->frame + FIL_PAGE_NEXT));
+
             if ((i + 1) == buf_pool->first_free) {
                 last = true;
             }

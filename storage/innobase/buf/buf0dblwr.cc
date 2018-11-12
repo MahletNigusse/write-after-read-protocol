@@ -1015,9 +1015,11 @@ try_again:
 		not corrupt and the LSN values are sane. */
 		/* mijin */
         if (((buf_page_t*) block)->flush_target) {
-            fprintf(stderr, "dwb twb block check = (%u, %u)\n",
+            fprintf(stderr, "dwb twb block check = (%u, %u) %lu %lu\n",
                     ((buf_page_t*) block)->id.space(),
-                    ((buf_page_t*) block)->id.page_no());
+                    ((buf_page_t*) block)->id.page_no(),
+                    mach_read_from_4(block->frame + FIL_PAGE_PREV),
+                    mach_read_from_4(block->frame + FIL_PAGE_NEXT));
         } else {/* end */
             buf_dblwr_check_block(block);
         }

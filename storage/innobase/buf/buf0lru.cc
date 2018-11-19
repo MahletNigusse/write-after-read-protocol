@@ -1468,8 +1468,8 @@ loop:
         first_free = buf_pool->first_free;
         buf_pool->first_free++;
 
-        memset(((buf_block_t*) bpage)->frame + FIL_PAGE_PREV, 0xff, 4);
-        memset(((buf_block_t*) bpage)->frame + FIL_PAGE_NEXT, 0xff, 4);
+        //memset(((buf_block_t*) bpage)->frame + FIL_PAGE_PREV, 0xff, 4);
+        //memset(((buf_block_t*) bpage)->frame + FIL_PAGE_NEXT, 0xff, 4);
         
         /* Copy the buffer frame into the copy pool. */
         memcpy(buf_pool->write_buf
